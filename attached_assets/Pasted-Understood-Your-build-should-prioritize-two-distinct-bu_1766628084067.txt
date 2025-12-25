@@ -1,0 +1,190 @@
+Understood. Your build should prioritize two distinct but integrated experiences:
+	1.	A website-first foundation (public site and client-facing flows).
+	2.	A dual-dashboard model:
+	•	A “Global” dashboard (standardized for everyone).
+	•	“Personal” dashboards (admin-created, role-based, and customizable).
+
+Below is a clean, implementation-ready blueprint.
+
+⸻
+
+1) Website-First Build Order
+
+Build the website as the primary product surface, then layer dashboards behind authentication.
+
+Phase 1: Public Website (MVP)
+
+Core pages that establish enterprise credibility:
+	•	Home
+	•	Services (threat monitoring primary + others as expansions)
+	•	Case Studies / Testimonials
+	•	Partners / Trust signals
+	•	Blog / News
+	•	Contact (forms, validation, confirmation, routing)
+	•	Privacy / Terms / Accessibility statement
+
+Non-negotiables from your source:
+	•	Performance optimization (bundling, caching, SSR where applicable)
+	•	Accessibility baseline (semantic HTML, keyboard access, alt text, contrast)
+	•	Content maintenance system (review cadence)
+
+Phase 2: Auth + Roles
+
+Before dashboards, implement:
+	•	Accounts, organizations (tenant), projects (workspaces)
+	•	RBAC roles (Admin, Editor, Viewer, Compliance, Release Manager)
+	•	Audit logging (who changed what)
+
+Phase 3: Dashboard Layer
+	•	Global dashboard (standard “single pane of glass”)
+	•	Personal dashboards (admin-configurable views)
+
+⸻
+
+2) Dual-Dashboard Concept
+
+A) Global Dashboard (for all)
+
+This is the standardized operational view. Every account sees the same baseline modules (permissions-filtered):
+
+Global dashboard widgets (recommended):
+	•	Site health: uptime, errors, page speed snapshots
+	•	Release status: last deployment, environment health, rollback readiness
+	•	Compliance: accessibility score, open issues, critical blockers
+	•	Content freshness: overdue pages, upcoming reviews
+	•	Traffic/engagement: top pages, bounce spikes
+
+This creates consistency and prevents “everyone building their own truth.”
+
+B) Personal Dashboards (admin-created)
+
+This is where admins can tailor dashboards per:
+	•	Person (My Dashboard)
+	•	Team (Marketing Dashboard)
+	•	Function (Compliance Dashboard)
+	•	Project (Client Portal Rollout Dashboard)
+
+Personal dashboards do not replace the Global dashboard; they optimize execution.
+
+⸻
+
+3) How Admins Create and Manage Personal Dashboards
+
+You need an admin UX that is simple, controlled, and auditable.
+
+Admin Workflow
+	1.	Dashboard Library
+	•	List of dashboards: Global (locked), Personal (custom)
+	•	Tags: “Marketing,” “Engineering,” “Compliance,” “Client X”
+	•	Ownership + last edited + viewers
+	2.	Create Dashboard
+	•	Name + description
+	•	Scope:
+	•	Private (only me)
+	•	Team (selected roles/users)
+	•	Organization-wide (everyone)
+	•	Data scope:
+	•	All projects
+	•	Specific project(s)
+	•	Specific environment(s)
+	3.	Add Widgets
+	•	Widget catalog with categories:
+	•	Performance
+	•	Accessibility
+	•	Content Ops
+	•	Deployments
+	•	Monitoring
+	•	SEO/Growth
+	•	Drag-and-drop layout (grid)
+	•	Configure per-widget filters (date range, page group, environment)
+	4.	Set Rules and Alerts
+	•	Thresholds (e.g., Lighthouse drops below X)
+	•	SLA alerts (e.g., quarterly review overdue)
+	•	Incident triggers (error rate spike)
+	5.	Publish + Permissions
+	•	View-only vs edit
+	•	Role-based access (RBAC)
+	•	Approval required for org-wide dashboards (optional but enterprise-friendly)
+	6.	Audit + Versioning
+	•	Change log for each dashboard
+	•	Restore previous versions
+
+This gives admins flexibility without creating governance chaos.
+
+⸻
+
+4) Recommended Widget Catalog
+
+These align directly to your source material and keep the dashboards “real” (not vanity metrics).
+
+Performance Widgets
+	•	Core Web Vitals trend by page group
+	•	Bundle size by route + “unused JS” estimates
+	•	Cache compliance report (static assets)
+	•	Slow API/DB endpoints leaderboard
+
+Accessibility Widgets
+	•	WCAG AA/AAA compliance score
+	•	Open a11y issues by severity and page
+	•	Keyboard navigation checklist status
+	•	Alt-text coverage report
+
+Content Ops Widgets
+	•	Pages overdue for review (quarterly)
+	•	Blog cadence tracker (weekly/monthly)
+	•	Case study/testimonial freshness
+	•	Highest-traffic pages needing updates
+
+QA/Launch Widgets
+	•	Staging parity checklist completion
+	•	Cross-browser/device test status
+	•	Load test results and capacity margin
+	•	DNS cutover readiness + post-launch watchlist
+
+Monitoring Widgets
+	•	Uptime last 7/30/90 days
+	•	JS error rate by release version
+	•	Incident timeline + open postmortems
+
+⸻
+
+5) Key Governance Rules (So It Stays “Enterprise”)
+
+Tell it like it is: if you allow unlimited customization with no standards, you get dashboard sprawl and conflicting metrics. Prevent that with:
+	•	Global dashboard is non-editable (only platform owners can modify).
+	•	Personal dashboards are allowed, but:
+	•	Must inherit the same metric definitions (“single source of truth”).
+	•	Must respect RBAC and data boundaries.
+	•	Org-wide dashboards require admin approval (optional but recommended).
+	•	Every dashboard change is logged.
+
+⸻
+
+6) The Actual Website-to-Dashboard User Journey
+	•	Visitor lands on website → sees credibility, fast load, accessible design
+	•	CTA: “Client Portal” / “Sign in”
+	•	After login:
+	•	Default: Global dashboard
+	•	Admins: can also access Dashboard Builder
+	•	Users: can pin/favorite dashboards they have access to
+
+⸻
+
+7) MVP Deliverable (Minimal but Strong)
+
+If your primary aim is “build website first,” then the lean MVP dashboard scope should be:
+	1.	Global dashboard (standard widgets)
+	2.	Dashboard library
+	3.	Create dashboard (basic)
+	4.	Add widgets + layout
+	5.	Permissions (view-only vs edit)
+	6.	Audit log (basic)
+
+Everything else (advanced alerts, versioning, A/B testing) can be v2.
+
+⸻
+
+If you want, I can convert this into:
+	•	A concrete sitemap (public site + portal routes), and
+	•	A dashboard builder screen-by-screen spec (exact fields, buttons, and rules),
+in a format your developer team can implement directly.
