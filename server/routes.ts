@@ -90,9 +90,9 @@ async function seedDatabase() {
     
     // Cost Table
     const tableData = [
-      { scale: "Small (10 users)", monthly: "$540", annual: "$6,480" },
-      { scale: "Medium (1,000 users)", monthly: "$3,700", annual: "$44,400" },
-      { scale: "Enterprise (10,000+ users)", monthly: "$18,500", annual: "$222,000" }
+      ["Small (10 users)", "$540", "$6,480"],
+      ["Medium (1,000 users)", "$3,700", "$44,400"],
+      ["Enterprise (10,000+ users)", "$18,500", "$222,000"]
     ];
     
     await storage.createSection({
