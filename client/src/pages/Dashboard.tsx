@@ -7,15 +7,20 @@ import {
 import { 
   Briefcase, TrendingUp, Landmark, ShieldCheck, 
   Activity, Users, AlertCircle, Search, 
-  ArrowUpRight, Clock, Database, Server, Cpu
+  ArrowUpRight, Clock, Database, Server, Cpu,
+  Lock, Key, Smartphone, Fingerprint
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export default function Dashboard() {
   const [location] = useLocation();
+  const [unlockStep, setUnlockStep] = useState(0); // 0: Locked, 1: 2FA, 2: Unlocked
 
   const { data: health } = useQuery({
     queryKey: ["/api/health"],
@@ -26,7 +31,65 @@ export default function Dashboard() {
     enabled: location.startsWith("/admin") || location === "/",
   });
 
-  const isAdmin = location.startsWith("/admin");
+  if (unlockStep < 2 && (location.startsWith("/admin") || location === "/portal")) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
+        <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-primary animate-pulse">
+          <Lock className="h-10 w-10" />
+        </div>
+        
+        <div className="text-center space-y-2 max-w-md">
+          <h2 className="text-2xl font-bold tracking-tight">Security Protocol Required</h2>
+          <p className="text-muted-foreground">
+            You are attempting to access a secure enterprise zone. Please verify your identity using the Auth Security Encryptor.
+          </p>
+        </div>
+
+        <Card className="w-full max-w-sm border-2 border-primary/20 shadow-2xl shadow-primary/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {unlockStep === 0 ? <Fingerprint className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}
+              {unlockStep === 0 ? "Identity Verification" : "2FA Unlocking"}
+            </CardTitle>
+            <CardDescription>
+              {unlockStep === 0 ? "Scan your credentials to proceed" : "Enter the code from your security device"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {unlockStep === 0 ? (
+              <Button 
+                className="w-full h-12 text-lg font-semibold"
+                onClick={() => setUnlockStep(1)}
+              >
+                Start Encrypted Session
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="h-12 w-full bg-muted rounded-md border border-border flex items-center justify-center font-bold text-lg">
+                      *
+                    </div>
+                  ))}
+                </div>
+                <Button 
+                  className="w-full h-12 text-lg font-semibold"
+                  onClick={() => setUnlockStep(2)}
+                >
+                  Confirm 2FA Unlock
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <ShieldCheck className="h-3 w-3" />
+          End-to-End Encrypted | AES-256 Bit Security
+        </p>
+      </div>
+    );
+  }
 
   if (location === "/admin/diagnostics") {
     return (
@@ -115,14 +178,76 @@ export default function Dashboard() {
     );
   }
 
+  if (location === "/portfolio" || location === "/investments" || location === "/grants") {
+    const type = location.substring(1);
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight capitalize">{type}</h1>
+            <p className="text-muted-foreground">Manage your enterprise {type} and assets.</p>
+          </div>
+          <Button className="gap-2">
+            <Activity className="h-4 w-4" />
+            Add New {type.slice(0, -1)}
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Active {type} List</span>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder={`Search ${type}...`} className="pl-9 h-9" />
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Entity Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Valuation / Amount</TableHead>
+                  <TableHead>Risk Level</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <TableRow key={i} className="group cursor-pointer">
+                    <TableCell className="font-medium">Enterprise Asset #{1000 + i}</TableCell>
+                    <TableCell><Badge variant="secondary">Active</Badge></TableCell>
+                    <TableCell>${(i * 1.2).toFixed(1)}M</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-12 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full bg-primary`} style={{ width: `${20 * i}%` }} />
+                        </div>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Grade {String.fromCharCode(64 + i)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon">
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {location === "/" ? "Executive Overview" : 
-             location.substring(1).split('/')[0].charAt(0).toUpperCase() + location.substring(1).split('/')[0].slice(1)}
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Executive Overview</h1>
           <p className="text-muted-foreground">
             Enterprise Command Center - Graded Performance
           </p>
