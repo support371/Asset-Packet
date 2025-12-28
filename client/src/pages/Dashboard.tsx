@@ -8,19 +8,22 @@ import {
   Briefcase, TrendingUp, Landmark, ShieldCheck, 
   Activity, Users, AlertCircle, Search, 
   ArrowUpRight, Clock, Database, Server, Cpu,
-  Lock, Key, Smartphone, Fingerprint
+  Lock, Key, Smartphone, Fingerprint, Globe, 
+  Zap, BarChart3, Layers
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Dashboard() {
   const [location] = useLocation();
-  const [unlockStep, setUnlockStep] = useState(0); // 0: Locked, 1: 2FA, 2: Unlocked
+  const [unlockStep, setUnlockStep] = useState(0); 
+  const [gradeScore, setGradeScore] = useState(98);
 
   const { data: health } = useQuery({
     queryKey: ["/api/health"],
@@ -31,359 +34,238 @@ export default function Dashboard() {
     enabled: location.startsWith("/admin") || location === "/",
   });
 
+  // Global usage simulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGradeScore(prev => Math.min(100, Math.max(95, prev + (Math.random() - 0.5))));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (unlockStep < 2 && (location.startsWith("/admin") || location === "/portal")) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
-        <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-primary animate-pulse">
-          <Lock className="h-10 w-10" />
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-8 relative overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
         
-        <div className="text-center space-y-2 max-w-md">
-          <h2 className="text-2xl font-bold tracking-tight">Security Protocol Required</h2>
-          <p className="text-muted-foreground">
-            You are attempting to access a secure enterprise zone. Please verify your identity using the Auth Security Encryptor.
-          </p>
-        </div>
-
-        <Card className="w-full max-w-sm border-2 border-primary/20 shadow-2xl shadow-primary/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {unlockStep === 0 ? <Fingerprint className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}
-              {unlockStep === 0 ? "Identity Verification" : "2FA Unlocking"}
-            </CardTitle>
-            <CardDescription>
-              {unlockStep === 0 ? "Scan your credentials to proceed" : "Enter the code from your security device"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {unlockStep === 0 ? (
-              <Button 
-                className="w-full h-12 text-lg font-semibold"
-                onClick={() => setUnlockStep(1)}
-              >
-                Start Encrypted Session
-              </Button>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex justify-between gap-2">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="h-12 w-full bg-muted rounded-md border border-border flex items-center justify-center font-bold text-lg">
-                      *
-                    </div>
-                  ))}
-                </div>
-                <Button 
-                  className="w-full h-12 text-lg font-semibold"
-                  onClick={() => setUnlockStep(2)}
-                >
-                  Confirm 2FA Unlock
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <ShieldCheck className="h-3 w-3" />
-          End-to-End Encrypted | AES-256 Bit Security
-        </p>
-      </div>
-    );
-  }
-
-  if (location === "/admin/diagnostics") {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">System Diagnostics</h1>
-            <p className="text-muted-foreground">Real-time enterprise performance monitoring</p>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative z-10 flex flex-col items-center space-y-6"
+        >
+          <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-primary shadow-2xl shadow-primary/20 relative group">
+            <div className="absolute inset-0 bg-primary/10 rounded-3xl animate-ping group-hover:animate-none opacity-20" />
+            <Lock className="h-10 w-10 relative z-10" />
           </div>
-          <Badge variant="outline" className="px-3 py-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-500">
-            Node: SSA-PRIMARY-01
-          </Badge>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">CPU Load</CardTitle>
-              <Cpu className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12%</div>
-              <Progress value={12} className="h-1 mt-2" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
-              <Database className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2.4GB / 8GB</div>
-              <Progress value={30} className="h-1 mt-2" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Network Latency</CardTitle>
-              <Server className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">45ms</div>
-              <p className="text-xs text-muted-foreground">P95 stable</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Endpoint Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Endpoint</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Avg Latency</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-mono text-xs">/api/portfolio</TableCell>
-                  <TableCell><Badge variant="secondary">GET</Badge></TableCell>
-                  <TableCell>12ms</TableCell>
-                  <TableCell><div className="flex items-center gap-1.5 text-emerald-500"><div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Healthy</div></TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-mono text-xs">/api/investments</TableCell>
-                  <TableCell><Badge variant="secondary">GET</Badge></TableCell>
-                  <TableCell>24ms</TableCell>
-                  <TableCell><div className="flex items-center gap-1.5 text-emerald-500"><div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Healthy</div></TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-mono text-xs">/api/admin/diagnostics</TableCell>
-                  <TableCell><Badge variant="secondary">GET</Badge></TableCell>
-                  <TableCell>45ms</TableCell>
-                  <TableCell><div className="flex items-center gap-1.5 text-emerald-500"><div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Healthy</div></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (location === "/portfolio" || location === "/investments" || location === "/grants") {
-    const type = location.substring(1);
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight capitalize">{type}</h1>
-            <p className="text-muted-foreground">Manage your enterprise {type} and assets.</p>
+          
+          <div className="text-center space-y-3 max-w-md">
+            <h2 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
+              Identity Synchronization
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Global usage detected. Secure enterprise protocol required for multi-region access.
+            </p>
           </div>
-          <Button className="gap-2">
-            <Activity className="h-4 w-4" />
-            Add New {type.slice(0, -1)}
-          </Button>
-        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Active {type} List</span>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder={`Search ${type}...`} className="pl-9 h-9" />
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Entity Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Valuation / Amount</TableHead>
-                  <TableHead>Risk Level</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <TableRow key={i} className="group cursor-pointer">
-                    <TableCell className="font-medium">Enterprise Asset #{1000 + i}</TableCell>
-                    <TableCell><Badge variant="secondary">Active</Badge></TableCell>
-                    <TableCell>${(i * 1.2).toFixed(1)}M</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-12 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full bg-primary`} style={{ width: `${20 * i}%` }} />
+          <Card className="w-full max-w-sm border border-primary/20 bg-card/50 backdrop-blur-xl shadow-2xl shadow-primary/5">
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2 text-xl">
+                {unlockStep === 0 ? <Fingerprint className="h-5 w-5 text-primary" /> : <Smartphone className="h-5 w-5 text-primary" />}
+                {unlockStep === 0 ? "Biometric Uplink" : "2FA Authorization"}
+              </CardTitle>
+              <CardDescription>
+                {unlockStep === 0 ? "Initiating encrypted handshake" : "Verifying multi-factor token"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <AnimatePresence mode="wait">
+                {unlockStep === 0 ? (
+                  <motion.div
+                    key="step0"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <Button 
+                      className="w-full h-14 text-lg font-bold hover-elevate active-elevate-2 shadow-lg shadow-primary/20"
+                      onClick={() => setUnlockStep(1)}
+                    >
+                      Initialize Session
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-6"
+                  >
+                    <div className="flex justify-between gap-3">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="h-14 w-full bg-muted/50 rounded-xl border border-border flex items-center justify-center font-bold text-xl text-primary shadow-inner">
+                          {i < 4 ? "•" : ""}
                         </div>
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Grade {String.fromCharCode(64 + i)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <ArrowUpRight className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                      ))}
+                    </div>
+                    <Button 
+                      className="w-full h-14 text-lg font-bold hover-elevate active-elevate-2 shadow-lg shadow-primary/20"
+                      onClick={() => setUnlockStep(2)}
+                    >
+                      Unlock Portal
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </CardContent>
+          </Card>
+          
+          <div className="flex items-center gap-4 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/60">
+            <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> RSA-4096</span>
+            <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+            <span className="flex items-center gap-1"><Globe className="h-3 w-3" /> Global Mesh</span>
+          </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Executive Overview</h1>
-          <p className="text-muted-foreground">
-            Enterprise Command Center - Graded Performance
+    <div className="space-y-10 pb-10">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="outline" className="text-[10px] font-black tracking-tighter uppercase px-2 bg-primary/5 text-primary border-primary/10">
+              Tier 1 Enterprise
+            </Badge>
+            <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Global Node: ID-X99</span>
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-foreground via-foreground to-foreground/50">
+            {location === "/" ? "Global Command" : 
+             location.substring(1).split('/')[0].charAt(0).toUpperCase() + location.substring(1).split('/')[0].slice(1)}
+          </h1>
+          <p className="text-muted-foreground text-lg max-w-2xl font-medium">
+            Real-time synchronization across multi-tenant infrastructures with graded performance optimization.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-medium border border-emerald-500/20">
-            <Activity className="h-3 w-3" />
-            System Healthy
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50 backdrop-blur-sm">
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Reliability Score</span>
+            <span className="text-2xl font-black tabular-nums text-emerald-500">{gradeScore.toFixed(2)}%</span>
+          </div>
+          <div className="h-10 w-[1px] bg-border/50" />
+          <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            <Activity className="h-6 w-6 animate-pulse" />
           </div>
         </div>
+      </header>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[
+          { title: "Network Grade", value: "AAA+", sub: "Top 0.1% Global", icon: Zap, color: "text-amber-500" },
+          { title: "Portfolio Assets", value: "842 Unit", sub: "Distributed Mesh", icon: Briefcase, color: "text-blue-500" },
+          { title: "Liquidity Index", value: "92.4", sub: "Market Optimized", icon: BarChart3, color: "text-primary" },
+          { title: "Security Layer", value: "Active", sub: "Zero Trust Protocol", icon: ShieldCheck, color: "text-emerald-500" },
+        ].map((stat, i) => (
+          <Card key={i} className="group hover-elevate transition-all border-border/40 overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{stat.title}</CardTitle>
+              <stat.icon className={`h-4 w-4 ${stat.color} opacity-70 group-hover:opacity-100 transition-opacity`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-black tracking-tighter">{stat.value}</div>
+              <p className="text-[10px] font-bold text-muted-foreground mt-1 flex items-center gap-1 uppercase">
+                {stat.sub}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover-elevate transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-1">
-            <CardTitle className="text-sm font-medium">Platform Grade</CardTitle>
-            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Grade A</div>
-            <p className="text-xs text-muted-foreground">
-              Based on enterprise metrics
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="hover-elevate transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-1">
-            <CardTitle className="text-sm font-medium">Active Portfolio</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12 Assets</div>
-            <p className="text-xs text-muted-foreground">
-              +2.5% from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="hover-elevate transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-1">
-            <CardTitle className="text-sm font-medium">Grants Lifecycle</CardTitle>
-            <Landmark className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$2.4M</div>
-            <p className="text-xs text-muted-foreground">
-              8 Pending review
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="hover-elevate transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-1">
-            <CardTitle className="text-sm font-medium">Security</CardTitle>
-            <ShieldCheck className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2FA Active</div>
-            <p className="text-xs text-muted-foreground">
-              Global enforcement
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Audit & Activity Log</CardTitle>
-              <CardDescription>
-                Recent sensitive enterprise actions
-              </CardDescription>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+        <Card className="lg:col-span-8 border-border/40 shadow-xl shadow-foreground/5 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between bg-muted/30 border-b border-border/50 py-6">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-bold">Infrastucture Activity</CardTitle>
+              <CardDescription className="text-xs font-medium uppercase tracking-wider">High-fidelity audit stream</CardDescription>
             </div>
-            <Badge variant="outline" className="text-[10px] uppercase">Live Stream</Badge>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Live Feed</span>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-0">
+            <div className="divide-y divide-border/40">
               {[
-                { action: "Role Upgrade", target: "User #452 -> Super Admin", time: "2h ago", icon: ShieldCheck, color: "text-primary" },
-                { action: "Portfolio Sync", target: "Global Assets Refreshed", time: "5h ago", icon: Briefcase, color: "text-blue-500" },
-                { action: "Grant Review", target: "Grant #882 Approved", time: "12h ago", icon: Landmark, color: "text-emerald-500" },
-                { action: "2FA Lockdown", target: "Security Policy Enforcement", time: "1d ago", icon: ShieldCheck, color: "text-amber-500" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-4 group">
-                  <div className={`h-9 w-9 rounded-full bg-muted flex items-center justify-center ${item.color}`}>
-                    <item.icon className="h-5 w-5" />
+                { action: "Core Auth Synchronization", user: "Node-SGP-1", time: "12s ago", status: "Verified" },
+                { action: "Cross-Tenant Asset Migration", user: "Admin-X", time: "2m ago", status: "Complete" },
+                { action: "Grants Allocation Cycle", user: "System", time: "14m ago", status: "Optimized" },
+                { action: "Security Policy Propagated", user: "Global-Root", time: "45m ago", status: "Secure" },
+              ].map((log, i) => (
+                <div key={i} className="flex items-center gap-6 p-6 hover:bg-muted/10 transition-colors group">
+                  <div className="h-12 w-12 rounded-2xl bg-card border border-border flex items-center justify-center group-hover:border-primary/30 transition-colors shadow-sm">
+                    <Layers className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {item.action}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.target}
-                    </p>
+                    <p className="font-bold text-sm tracking-tight">{log.action}</p>
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <span>{log.user}</span>
+                      <span className="h-1 w-1 rounded-full bg-border" />
+                      <span>{log.time}</span>
+                    </div>
                   </div>
-                  <div className="text-[10px] text-muted-foreground uppercase font-mono">
-                    {item.time}
-                  </div>
+                  <Badge variant="outline" className="font-black text-[9px] uppercase tracking-tighter border-emerald-500/20 bg-emerald-500/5 text-emerald-500">
+                    {log.status}
+                  </Badge>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Health Metrics</CardTitle>
-            <CardDescription>
-              Service level agreement status
-            </CardDescription>
+
+        <Card className="lg:col-span-4 border-border/40 bg-muted/10">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-xl font-bold">Service Health</CardTitle>
+            <CardDescription className="text-xs font-medium uppercase tracking-wider">Latency & Throughput</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Availability</span>
-                <span className="font-bold">99.99%</span>
+          <CardContent className="space-y-8 pt-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
+                <span className="text-muted-foreground">API Throughput</span>
+                <span>84.2k req/s</span>
               </div>
-              <Progress value={99.9} className="h-1 bg-muted" />
+              <div className="h-2 bg-muted rounded-full overflow-hidden border border-border/20">
+                <motion.div 
+                  className="h-full bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]" 
+                  initial={{ width: 0 }}
+                  animate={{ width: "85%" }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                />
+              </div>
             </div>
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-sm text-muted-foreground">Response (P95)</span>
-              <span className="text-sm font-bold text-emerald-500">45ms</span>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-1">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">P99 Latency</span>
+                <p className="text-xl font-black tabular-nums">4.2ms</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-1">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Uptime</span>
+                <p className="text-xl font-black tabular-nums text-emerald-500">99.99</p>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Error Rate</span>
-              <span className="text-sm font-bold text-emerald-500">0.01%</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Security Grade</span>
-              <span className="text-sm font-bold text-primary">A+</span>
-            </div>
-            <div className="pt-4 border-t">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted p-3 rounded-md border border-border/50">
-                <AlertCircle className="h-4 w-4 text-amber-500" />
-                <div className="flex flex-col">
-                  <span className="font-medium text-foreground">Safe Mode Ready</span>
-                  <span>System is optimized for high traffic usage.</span>
+
+            <div className="space-y-4 pt-4 border-t border-border/50">
+              <div className="flex items-start gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 group cursor-help transition-all hover:bg-primary/10">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold uppercase tracking-wide">Enterprise Shield</p>
+                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
+                    Global 2FA enforcement and hardware security keys enabled for all administrative nodes.
+                  </p>
                 </div>
               </div>
             </div>
