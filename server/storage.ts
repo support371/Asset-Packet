@@ -1,39 +1,99 @@
 import { db } from "./db";
-import { packets, sections, type Packet, type Section, type PacketWithSections } from "@shared/schema";
-import { eq, asc } from "drizzle-orm";
+import { 
+  users, organizations, teams, teamMembers, portfolio, 
+  investments, grants, communications, auditLogs,
+  type User, type Organization, type Grant, type Investment, 
+  type Portfolio, type AuditLog 
+} from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
-  getPackets(): Promise<Packet[]>;
-  getPacket(id: number): Promise<PacketWithSections | undefined>;
-  createPacket(packet: typeof packets.$inferInsert): Promise<Packet>;
-  createSection(section: typeof sections.$inferInsert): Promise<Section>;
+  // Users
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: any): Promise<User>;
+  
+  // Organizations
+  getOrganization(id: number): Promise<Organization | undefined>;
+  createOrganization(org: any): Promise<Organization>;
+  
+  // Portfolio
+  getPortfolios(orgId: number): Promise<Portfolio[]>;
+  createPortfolio(data: any): Promise<Portfolio>;
+  
+  // Investments
+  getInvestments(orgId: number): Promise<Investment[]>;
+  createInvestment(data: any): Promise<Investment>;
+  
+  // Grants
+  getGrants(orgId: number): Promise<Grant[]>;
+  createGrant(data: any): Promise<Grant>;
+  
+  // Audit
+  createAuditLog(log: any): Promise<AuditLog>;
+  getAuditLogs(orgId: number): Promise<AuditLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getPackets(): Promise<Packet[]> {
-    return await db.select().from(packets);
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
-  async getPacket(id: number): Promise<PacketWithSections | undefined> {
-    const packet = await db.select().from(packets).where(eq(packets.id, id)).limit(1);
-    if (packet.length === 0) return undefined;
-
-    const packetSections = await db.select()
-      .from(sections)
-      .where(eq(sections.packetId, id))
-      .orderBy(asc(sections.order));
-
-    return { ...packet[0], sections: packetSections };
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
-  async createPacket(packet: typeof packets.$inferInsert): Promise<Packet> {
-    const [newPacket] = await db.insert(packets).values(packet).returning();
-    return newPacket;
+  async createUser(user: any): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
   }
 
-  async createSection(section: typeof sections.$inferInsert): Promise<Section> {
-    const [newSection] = await db.insert(sections).values(section).returning();
-    return newSection;
+  async getOrganization(id: number): Promise<Organization | undefined> {
+    const [org] = await db.select().from(organizations).where(eq(organizations.id, id));
+    return org;
+  }
+
+  async createOrganization(org: any): Promise<Organization> {
+    const [newOrg] = await db.insert(organizations).values(org).returning();
+    return newOrg;
+  }
+
+  async getPortfolios(orgId: number): Promise<Portfolio[]> {
+    return await db.select().from(portfolio).where(eq(portfolio.organizationId, orgId));
+  }
+
+  async createPortfolio(data: any): Promise<Portfolio> {
+    const [item] = await db.insert(portfolio).values(data).returning();
+    return item;
+  }
+
+  async getInvestments(orgId: number): Promise<Investment[]> {
+    return await db.select().from(investments).where(eq(investments.organizationId, orgId));
+  }
+
+  async createInvestment(data: any): Promise<Investment> {
+    const [item] = await db.insert(investments).values(data).returning();
+    return item;
+  }
+
+  async getGrants(orgId: number): Promise<Grant[]> {
+    return await db.select().from(grants).where(eq(grants.organizationId, orgId));
+  }
+
+  async createGrant(data: any): Promise<Grant> {
+    const [item] = await db.insert(grants).values(data).returning();
+    return item;
+  }
+
+  async createAuditLog(log: any): Promise<AuditLog> {
+    const [newLog] = await db.insert(auditLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getAuditLogs(orgId: number): Promise<AuditLog[]> {
+    return await db.select().from(auditLogs).where(eq(auditLogs.organizationId, orgId));
   }
 }
 

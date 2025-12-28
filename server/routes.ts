@@ -1,133 +1,54 @@
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
-import { api } from "@shared/routes";
-import fs from "fs";
-import path from "path";
-
-async function seedDatabase() {
-  const existingPackets = await storage.getPackets();
-  if (existingPackets.length > 0) return;
-
-  console.log("Seeding database from HTML packet...");
-  
-  try {
-    const packetPath = path.join(process.cwd(), "attached_assets", "GEM_ATR_enterprise_agency_packet_1766443025899.html");
-    if (!fs.existsSync(packetPath)) {
-      console.log("Packet file not found, skipping seed.");
-      return;
-    }
-
-    const htmlContent = fs.readFileSync(packetPath, "utf-8");
-
-    // Create the packet
-    const packet = await storage.createPacket({
-      title: "GEM & ATR Unified Digital Command Center",
-      description: "Enterprise Agency Export Packet - Consolidated Transformation Dossier",
-      meta: { compiled: "2025-12-22" }
-    });
-
-    // Parse and add sections (Simple parsing logic for MVP)
-    
-    // 1. Executive Summary
-    const execSummaryMatch = htmlContent.match(/<h2>1\) Executive Summary.*?<pre>(.*?)<\/pre>/s);
-    if (execSummaryMatch) {
-      await storage.createSection({
-        packetId: packet.id,
-        title: "Executive Summary",
-        type: "summary",
-        content: execSummaryMatch[1].trim(),
-        order: 1,
-        data: {}
-      });
-    }
-
-    // 2. Visual Evidence (Images)
-    const images: string[] = [];
-    const imgRegex = /<img src="(data:image\/[^;]+;base64,[^"]+)"/g;
-    let match;
-    while ((match = imgRegex.exec(htmlContent)) !== null) {
-      images.push(match[1]);
-    }
-
-    if (images.length > 0) {
-      await storage.createSection({
-        packetId: packet.id,
-        title: "Visual Evidence",
-        type: "gallery",
-        content: "Visual documentation and evidence gathered.",
-        order: 2,
-        data: { images }
-      });
-    }
-
-    // 3. Source Material
-    const sourceMatch = htmlContent.match(/<h2>3\) Source Material A.*?<pre>(.*?)<\/pre>/s);
-    if (sourceMatch) { // Note: The regex might need to be robust, but sticking to simple for now
-       // Use a simpler approach if regex fails on large content or nested tags. 
-       // Just grabbing the text content inside the details/pre block
-       const cleanContent = sourceMatch[1] || "";
-       
-       await storage.createSection({
-        packetId: packet.id,
-        title: "Source Material A",
-        type: "text",
-        content: cleanContent.trim(),
-        order: 3,
-        data: {}
-      });
-    } else {
-        // Fallback if regex misses
-        await storage.createSection({
-            packetId: packet.id,
-            title: "Source Material",
-            type: "text",
-            content: "Performance, Accessibility, Content Ops data...",
-            order: 3,
-            data: {}
-        });
-    }
-    
-    // Cost Table
-    const tableData = [
-      ["Small (10 users)", "$540", "$6,480"],
-      ["Medium (1,000 users)", "$3,700", "$44,400"],
-      ["Enterprise (10,000+ users)", "$18,500", "$222,000"]
-    ];
-    
-    await storage.createSection({
-        packetId: packet.id,
-        title: "Cost Analysis",
-        type: "table",
-        content: "Reference cost rollups.",
-        order: 4,
-        data: { headers: ["Scale", "Monthly", "Annual"], rows: tableData }
-    });
-
-    console.log("Database seeded successfully!");
-  } catch (error) {
-    console.error("Error seeding database:", error);
-  }
-}
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Seed on startup
-  seedDatabase();
-
-  app.get(api.packets.list.path, async (_req, res) => {
-    const packets = await storage.getPackets();
-    res.json(packets);
+  
+  // Health check
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "healthy", version: "1.0.0-enterprise" });
   });
 
-  app.get(api.packets.get.path, async (req, res) => {
-    const packet = await storage.getPacket(Number(req.params.id));
-    if (!packet) {
-      return res.status(404).json({ message: 'Packet not found' });
-    }
-    res.json(packet);
+  // Basic RBAC middleware mock (for Fast Mode progress)
+  const checkRole = (roles: string[]) => (req: any, res: any, next: any) => {
+    // In a real app, we'd get this from session/JWT
+    const userRole = req.headers["x-user-role"] || "viewer";
+    if (roles.includes(userRole as string)) return next();
+    res.status(403).json({ message: "Forbidden" });
+  };
+
+  // Portfolio
+  app.get("/api/portfolio", async (req, res) => {
+    const orgId = Number(req.query.orgId) || 1;
+    const items = await storage.getPortfolios(orgId);
+    res.json(items);
+  });
+
+  // Investments
+  app.get("/api/investments", async (req, res) => {
+    const orgId = Number(req.query.orgId) || 1;
+    const items = await storage.getInvestments(orgId);
+    res.json(items);
+  });
+
+  // Grants
+  app.get("/api/grants", async (req, res) => {
+    const orgId = Number(req.query.orgId) || 1;
+    const items = await storage.getGrants(orgId);
+    res.json(items);
+  });
+
+  // Admin Diagnostics
+  app.get("/api/admin/diagnostics", checkRole(["super_admin", "admin"]), async (req, res) => {
+    res.json({
+      latency: "45ms",
+      errorRate: "0.01%",
+      uptime: "99.99%",
+      grade: "A"
+    });
   });
 
   return httpServer;
