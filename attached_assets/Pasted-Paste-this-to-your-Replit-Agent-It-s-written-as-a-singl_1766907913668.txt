@@ -1,0 +1,225 @@
+Paste this to your Replit Agent. It’s written as a single, actionable build mandate to upgrade the existing website into the higher-quality enterprise version (teams/users/RBAC/grants/portfolio/admin/client portal/newsletter) while staying Fast Mode-friendly and avoiding upgrade prompts.
+
+⸻
+
+REPLIT AGENT — UPGRADE THIS SITE TO ENTERPRISE-GRADE (HIGH QUALITY VERSION)
+
+Scope: Modify the current project in-place. Do NOT create a new repo. Do NOT request Autonomous/Upgrade. Work in Fast Mode with small commits.
+
+Primary Objective
+
+Transform the current SSA website/SaaS into a production-credible enterprise platform with:
+	•	Teams + Users + RBAC
+	•	Admin Control Plane
+	•	Dashboard + Portfolio + Investments
+	•	Grants lifecycle management
+	•	Client Portal (external users)
+	•	Newsletter + announcements (communications)
+	•	Performance + diagnostics + safe-mode resilience
+
+⸻
+
+STEP 1 — Repo Recon (must do first)
+
+Run and summarize:
+	•	ls -la
+	•	find . -maxdepth 3 -name package.json -o -name requirements.txt -o -name pyproject.toml -o -name .replit -o -name replit.nix
+	•	Identify stack: frontend framework + backend framework + DB.
+	•	Locate auth + dashboard routes/components.
+
+Deliverable: list the 6–10 files you will touch first.
+
+⸻
+
+STEP 2 — Enterprise Navigation & Information Architecture (high quality UX)
+
+Upgrade the UI structure without redesigning branding:
+	•	Top-level navigation must include:
+	•	Dashboard
+	•	Portfolio
+	•	Investments
+	•	Grants
+	•	Evidence/Docs
+	•	Reports
+	•	Newsletter
+	•	Admin (role-gated)
+	•	Client Portal (role-gated)
+
+Implement:
+	•	Left sidebar for app routes + top bar for org/user controls
+	•	Clean empty states (never blank screen)
+	•	“Configure” button for admins
+
+Acceptance: The app looks structured and enterprise-ready immediately.
+
+⸻
+
+STEP 3 — Identity + RBAC (non-negotiable)
+
+Implement RBAC end-to-end.
+
+Roles:
+	•	Super Admin
+	•	Admin
+	•	Team Member
+	•	Client / Investor
+	•	Partner / Trustee
+	•	Subscriber
+
+Rules:
+	•	Admin routes are inaccessible unless role allows
+	•	Client Portal accessible only for external roles
+	•	Role enforcement on server + client (not client-only)
+
+Acceptance: A user cannot access Admin or other tenant’s data by URL guessing.
+
+⸻
+
+STEP 4 — Teams + Tenant Model
+
+Add:
+	•	Organizations (tenant)
+	•	Teams (within org)
+	•	User-to-team assignment
+	•	Team scoped visibility for assets/grants/investments
+
+UI:
+	•	Admin > Teams: create, edit, add members, assign roles
+
+Acceptance: Team A cannot see Team B data unless explicitly allowed.
+
+⸻
+
+STEP 5 — Dashboard Framework (configurable modules)
+
+Implement a modular dashboard system:
+Modules:
+	•	Overview
+	•	Briefing/Updates
+	•	Financials
+	•	Portfolio
+	•	Investments
+	•	Grants
+	•	Evidence/Docs
+	•	Source Material
+	•	Activity/Audit Log
+
+Requirements:
+	•	Modules can be enabled/disabled per org (Admin)
+	•	Each module loads separately (code split / lazy)
+	•	If no data exists, show guided setup or demo seed
+
+Acceptance: No “empty dashboard” post-login.
+
+⸻
+
+STEP 6 — Core Business Objects
+
+Implement CRUD + list views with pagination for:
+	1.	Portfolio
+
+	•	assets, status, valuation, notes, attachments
+
+	2.	Investments
+
+	•	investment entries, returns, status, reports
+
+	3.	Grants
+
+	•	grant lifecycle: created → reviewed → approved → allocated → closed
+	•	beneficiary association, compliance notes, attachments
+
+Acceptance: These are usable, role-scoped, and stable.
+
+⸻
+
+STEP 7 — Client Portal (external experience)
+
+Create a separate route group:
+	•	/portal/*
+
+Client portal includes:
+	•	portfolio summary
+	•	investment snapshot
+	•	downloadable reports/documents
+	•	announcements
+	•	limited messaging/contact
+
+Constraints:
+	•	External users never see internal admin/ops data
+	•	Strict scoping to their org + allowed portfolio records
+
+Acceptance: Portal is credible enough for enterprise clients.
+
+⸻
+
+STEP 8 — Newsletter + Communications (sales + ops)
+
+Implement:
+	•	Newsletter subscription (public)
+	•	Admin campaign creation (internal)
+	•	Announcements module inside dashboard
+	•	Role-based visibility of announcements
+
+Acceptance: Admin can publish updates; subscribers have limited access.
+
+⸻
+
+STEP 9 — Observability + Performance (graded)
+
+Implement minimal enterprise observability:
+	•	/health and /ready
+	•	Admin > Diagnostics page
+	•	“Performance Grade” (A/B/C) computed from:
+	•	response latency (p50/p95)
+	•	error rate
+	•	bundle size budgets per route (basic checks)
+
+Also implement:
+	•	Safe Mode toggle (admin-only) to disable heavy modules if degraded.
+
+Acceptance: System communicates health clearly and degrades gracefully.
+
+⸻
+
+STEP 10 — Security & Audit (must-have)
+	•	Audit log table/event stream for:
+	•	role changes
+	•	team changes
+	•	grant approvals
+	•	investment changes
+	•	document access
+	•	Record: who, what, when, IP/user-agent if available.
+
+Acceptance: A basic audit trail exists and is viewable by Admin.
+
+⸻
+
+DELIVERY RULES
+	•	Ship in incremental commits:
+	1.	Nav + empty states
+	2.	RBAC gating
+	3.	Org/Teams model
+	4.	Dashboard modules
+	5.	Portfolio/Investments/Grants
+	6.	Client Portal
+	7.	Newsletter
+	8.	Diagnostics + Safe Mode
+	•	After each step: test login + dashboard renders + role gating works.
+
+⸻
+
+DEFINITION OF DONE (must pass)
+	1.	Admin can create org/team/users and assign roles
+	2.	Team-scoped views work (no data leakage)
+	3.	Dashboard modules configurable per org
+	4.	Portfolio, Investments, Grants fully usable
+	5.	Client Portal works for external roles
+	6.	Newsletter + announcements publish correctly
+	7.	/health and diagnostics panel work
+	8.	Audit log records sensitive actions
+	9.	No blank pages, no broken navigation, no upgrade prompts
+
+⸻
+
+If you want, tell me the stack the agent reports (Next.js vs React SPA, Node vs FastAPI, SQLite vs Postgres) and I’ll produce a second paste block with the exact table schemas + endpoint contracts for that stack.

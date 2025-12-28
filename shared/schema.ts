@@ -1,79 +1,121 @@
-import { pgTable, text, serial, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, boolean, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// === ORGANIZATIONS & RBAC ===
+// Organizations (Tenants)
 export const organizations = pgTable("organizations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  plan: text("plan").default("standard"), // 'standard', 'global', 'enterprise'
+  slug: text("slug").unique().notNull(),
+  plan: text("plan").notNull().default("enterprise"), // enterprise, professional, basic
+  isSafeMode: boolean("is_safe_mode").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Users & RBAC
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   replitId: text("replit_id").unique(),
   username: text("username").notNull().unique(),
-  email: text("email"),
+  email: text("email").notNull(),
   organizationId: integer("organization_id").references(() => organizations.id),
-  role: text("role").notNull().default("viewer"), // 'admin', 'client', 'viewer'
-  gradedScore: integer("graded_score").default(0), // Graded version of profile
-  is2FAEnabled: boolean("is_2fa_enabled").default(false),
-  secret2FA: text("secret_2fa"), // Encrypted secret
+  role: text("role").notNull().default("viewer"), // super_admin, admin, team_member, client, partner, subscriber
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  twoFactorSecret: text("two_factor_secret"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// === DASHBOARDS ===
-export const dashboards = pgTable("dashboards", {
+// Teams within Organizations
+export const teams = pgTable("teams", {
   id: serial("id").primaryKey(),
-  organizationId: integer("organization_id").references(() => organizations.id),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
-  type: text("type").notNull().default("personal"), // 'global', 'personal'
-  config: jsonb("config"), 
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const widgets = pgTable("widgets", {
+// User-Team Mapping
+export const teamMembers = pgTable("team_members", {
   id: serial("id").primaryKey(),
-  dashboardId: integer("dashboard_id").references(() => dashboards.id).notNull(),
-  type: text("type").notNull(), 
-  title: text("title").notNull(),
-  config: jsonb("config"),
-  order: integer("order").notNull(),
+  teamId: integer("team_id").references(() => teams.id).notNull(),
+  userId: integer("userId").references(() => users.id).notNull(),
 });
 
-// === CONTENT PACKETS ===
-export const packets = pgTable("packets", {
+// Portfolio Assets
+export const portfolio = pgTable("portfolio", {
   id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  status: text("status").notNull(), // active, pending, closed
+  valuation: doublePrecision("valuation").default(0),
+  notes: text("notes"),
+  attachments: jsonb("attachments").default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Investments
+export const investments = pgTable("investments", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  portfolioId: integer("portfolio_id").references(() => portfolio.id),
+  amount: doublePrecision("amount").notNull(),
+  returns: doublePrecision("returns").default(0),
+  status: text("status").notNull(), // active, exited
+  reportUrl: text("report_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Grants Lifecycle
+export const grants = pgTable("grants", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  status: text("status").notNull(), // created, reviewed, approved, allocated, closed
+  amount: doublePrecision("amount").default(0),
+  beneficiary: text("beneficiary"),
+  complianceNotes: text("compliance_notes"),
+  attachments: jsonb("attachments").default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Newsletter & Communications
+export const communications = pgTable("communications", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  type: text("type").notNull(), // newsletter, announcement
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  targetRoles: jsonb("target_roles").default([]), // For announcements
+  isPublished: boolean("is_published").default(false),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Audit Logging
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
   organizationId: integer("organization_id").references(() => organizations.id),
-  title: text("title").notNull(),
-  description: text("description"),
-  meta: jsonb("meta"),
+  action: text("action").notNull(),
+  targetType: text("target_type"), // user, grant, investment, etc.
+  targetId: integer("target_id"),
+  metadata: jsonb("metadata"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const sections = pgTable("sections", {
-  id: serial("id").primaryKey(),
-  packetId: integer("packet_id").references(() => packets.id).notNull(),
-  title: text("title").notNull(),
-  type: text("type").notNull(),
-  content: text("content"),
-  data: jsonb("data"),
-  order: integer("order").notNull(),
-});
-
-// === SCHEMAS & TYPES ===
+// Schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertOrgSchema = createInsertSchema(organizations).omit({ id: true, createdAt: true });
-export const insertDashboardSchema = createInsertSchema(dashboards).omit({ id: true, createdAt: true });
-export const insertWidgetSchema = createInsertSchema(widgets).omit({ id: true });
-export const insertPacketSchema = createInsertSchema(packets).omit({ id: true, createdAt: true });
-export const insertSectionSchema = createInsertSchema(sections).omit({ id: true });
+export const insertGrantSchema = createInsertSchema(grants).omit({ id: true, createdAt: true });
+export const insertInvestmentSchema = createInsertSchema(investments).omit({ id: true, createdAt: true });
+export const insertPortfolioSchema = createInsertSchema(portfolio).omit({ id: true, createdAt: true });
 
+// Types
 export type User = typeof users.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
-export type Dashboard = typeof dashboards.$inferSelect;
-export type Widget = typeof widgets.$inferSelect;
-export type Packet = typeof packets.$inferSelect;
-export type Section = typeof sections.$inferSelect;
+export type Grant = typeof grants.$inferSelect;
+export type Investment = typeof investments.$inferSelect;
+export type Portfolio = typeof portfolio.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
