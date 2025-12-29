@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEM & ATR Platform Overview v4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Background (Slate-50), GEM Blue (Blue-700), Alliance Amber (Amber-600) -->
+    <!-- Application Structure Plan: 
+         1. Header: Branding and Navigation.
+         2. Strategic Overview (AI ENHANCED): Intro text + "Live AI Analysis Ticker" + Dynamic Chart.
+         3. Team Command Center (VISUALLY ENHANCED): 
+            - Profile images are now large, bold, and high-quality avatars.
+            - Avatars are color-coded (Blue/Amber) to match the team.
+            - Added bold borders and shadows for a "clear picture overview".
+         4. Architecture: Interactive HTML-based diagram.
+         5. AI Agent Overseer: Terminal simulation "reading" the updated data.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Profile Cards: Upgraded to use `ui-avatars.com` for generating crisp, bold, initial-based profile pictures that replace the previous small text circles.
+         2. Styling: Added `w-20 h-20`, `border-4`, and `shadow-lg` to the images for visual weight.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. NO LinkedIn links included. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbar for Terminal */
+        .terminal-scroll::-webkit-scrollbar { width: 8px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .terminal-scroll::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* Pulsing Dot Animation */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); }
+            80%, 100% { opacity: 0; }
+        }
+        @keyframes pulse-dot {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1); }
+            100% { transform: scale(0.8); }
+        }
+        .pulse-ring {
+            position: absolute;
+            height: 100%; width: 100%;
+            border-radius: 50%;
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        .pulse-dot {
+            position: absolute;
+            height: 100%; width: 100%;
+            border-radius: 50%;
+            background-color: currentColor;
+            animation: pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite;
+        }
+
+        /* Chart Container Utilities */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            height: 300px;
+            max-height: 300px;
+        }
+
+        /* Interactive Node States */
+        .arch-node { transition: all 0.2s ease; cursor: pointer; }
+        .arch-node:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .arch-node.active { ring-width: 2px; ring-color: #3b82f6; border-color: #3b82f6; background-color: #eff6ff; }
+
+        /* AI Scan Line Effect */
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #22c55e, transparent);
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: scan 3s linear infinite;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-700 to-amber-600 rounded-lg shadow-sm"></div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">GEM & ATR <span class="font-normal text-slate-500">Platform</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <button onclick="scrollToSection('team')" class="text-sm font-medium text-slate-500 hover:text-blue-700 transition-colors">Personnel</button>
+                    <button onclick="scrollToSection('architecture')" class="text-sm font-medium text-slate-500 hover:text-blue-700 transition-colors">Architecture</button>
+                    <button onclick="scrollToSection('ai-agent')" class="text-sm font-medium text-slate-500 hover:text-blue-700 transition-colors">AI Overseer</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
+
+        <!-- 1. Strategic Overview (AI Enhanced) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
+            <div class="lg:col-span-2 space-y-6">
+                <!-- AI Ticker -->
+                <div class="bg-slate-900 text-green-400 font-mono text-xs py-2 px-4 rounded-md flex items-center gap-3 overflow-hidden shadow-inner">
+                    <span class="animate-pulse">● LIVE</span>
+                    <span class="text-slate-500">|</span>
+                    <div id="ai-ticker" class="whitespace-nowrap overflow-hidden w-full">
+                        INITIALIZING SYSTEM SCAN...
+                    </div>
+                </div>
+
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+                    Unified Operations for <span class="text-blue-700">Cybersecurity</span> & <span class="text-amber-600">Real Estate</span>
+                </h1>
+                <p class="text-lg text-slate-600 leading-relaxed max-w-2xl">
+                    Welcome to the GEM & ATR platform overview v4.0. Our expanded roster now includes <strong id="total-staff-count">40+</strong> active operatives. The AI Overseer below actively monitors compliance across both the <span class="font-bold text-blue-800">GEM</span> (Threat Intel) and <span class="font-bold text-amber-800">Alliance</span> (Asset Management) divisions.
+                </p>
+                <div class="flex gap-4 pt-2">
+                    <div class="px-4 py-3 bg-blue-50 border border-blue-100 rounded-lg shadow-sm flex-1 max-w-[200px]">
+                        <span class="block text-[10px] font-bold text-blue-600 uppercase tracking-widest">GEM Agents</span>
+                        <span class="text-2xl font-bold text-blue-900" id="gem-count-display">--</span>
+                        <span class="text-xs text-blue-500 block mt-1">Cyber / Compliance</span>
+                    </div>
+                    <div class="px-4 py-3 bg-amber-50 border border-amber-100 rounded-lg shadow-sm flex-1 max-w-[200px]">
+                        <span class="block text-[10px] font-bold text-amber-600 uppercase tracking-widest">Alliance Staff</span>
+                        <span class="text-2xl font-bold text-amber-900" id="atr-count-display">--</span>
+                        <span class="text-xs text-amber-500 block mt-1">Realty / Legal</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visualization: Team Roles -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                <div class="scan-line"></div> <!-- Visual effect -->
+                <div class="mb-4 flex justify-between items-end">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Live Force Distribution</h3>
+                        <p class="text-xs text-slate-500">Real-time role aggregation by AI.</p>
+                    </div>
+                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-mono">UPDATED</span>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="rolesChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Team Command Center -->
+        <section id="team" class="scroll-mt-20">
+            <div class="border-l-4 border-blue-700 pl-4 mb-8 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Personnel Directory</h2>
+                    <p class="text-slate-600 mt-2 text-sm">
+                        Full roster database. <strong>Updated V4.0 Visuals:</strong> High-definition color-coded avatars enabled.
+                    </p>
+                </div>
+                <!-- Pagination / Info -->
+                <div class="text-right hidden md:block">
+                    <p class="text-xs text-slate-400 font-mono" id="showing-count">Showing all records</p>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex flex-wrap gap-2 mb-6 sticky top-20 z-40 bg-slate-50/90 backdrop-blur-sm py-2">
+                <button onclick="filterTeam('all')" id="btn-all" class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-slate-800 text-white shadow-md ring-2 ring-slate-800 ring-offset-2">All Units</button>
+                <button onclick="filterTeam('GEM')" id="btn-gem" class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-700 border border-slate-200">GEM (Cyber)</button>
+                <button onclick="filterTeam('Alliance')" id="btn-alliance" class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-700 border border-slate-200">Alliance (Realty)</button>
+            </div>
+
+            <!-- Grid -->
+            <div id="team-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Cards injected via JS -->
+            </div>
+        </section>
+
+        <!-- 3. Architecture & Tech Stack -->
+        <section id="architecture" class="scroll-mt-20">
+            <div class="border-l-4 border-slate-700 pl-4 mb-8">
+                <h2 class="text-2xl font-bold text-slate-900">System Architecture</h2>
+                <p class="text-slate-600 mt-2">
+                    Interactive structural diagram. Click nodes to reveal Front-End/Back-End specs.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-auto lg:h-[500px]">
+                
+                <!-- Diagram Pane -->
+                <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-8 shadow-sm relative overflow-hidden flex flex-col justify-center">
+                    <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(#64748b 1px, transparent 1px); background-size: 24px 24px;"></div>
+                    
+                    <div class="relative z-10 w-full max-w-lg mx-auto flex flex-col items-center gap-6">
+                        <!-- Client -->
+                        <div onclick="showArchDetail('frontend')" id="node-frontend" class="arch-node w-full bg-white p-4 rounded-lg border-2 border-slate-200 flex items-center gap-4 group hover:border-blue-500 shadow-sm">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">Re</div>
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-900 group-hover:text-blue-600">Front-End Client</h4>
+                            </div>
+                        </div>
+                        <!-- Line -->
+                        <div class="h-6 w-px bg-slate-300"></div>
+                        <!-- Server -->
+                        <div onclick="showArchDetail('backend')" id="node-backend" class="arch-node w-full bg-white p-4 rounded-lg border-2 border-slate-200 flex items-center gap-4 group hover:border-green-500 shadow-sm">
+                            <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-lg">Py</div>
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-900 group-hover:text-green-600">Back-End Server</h4>
+                            </div>
+                        </div>
+                        <!-- Line -->
+                        <div class="h-6 w-px bg-slate-300"></div>
+                        <!-- Split -->
+                        <div class="w-full flex justify-between items-start gap-4">
+                            <div onclick="showArchDetail('db')" id="node-db" class="arch-node flex-1 bg-white p-3 rounded-lg border-2 border-slate-200 flex flex-col items-center text-center group hover:border-indigo-500 shadow-sm">
+                                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs mb-1">DB</div>
+                                <h4 class="font-bold text-xs text-slate-900">PostgreSQL</h4>
+                            </div>
+                            <div onclick="showArchDetail('agent')" id="node-agent" class="arch-node flex-1 bg-white p-3 rounded-lg border-2 border-slate-200 flex flex-col items-center text-center group hover:border-red-500 shadow-sm">
+                                <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs mb-1">AI</div>
+                                <h4 class="font-bold text-xs text-slate-900">Chrome Agent</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details Pane -->
+                <div class="lg:col-span-5 bg-slate-900 rounded-xl p-6 shadow-lg flex flex-col text-slate-300 font-mono text-sm overflow-hidden">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-700 pb-2">
+                        <span class="text-green-400 font-bold" id="detail-title">System Overview</span>
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                    </div>
+                    <div id="detail-content" class="flex-1 overflow-y-auto pr-2 terminal-scroll space-y-4">
+                        <p>Select a node in the diagram to view specifications.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. AI Agent Overseer -->
+        <section id="ai-agent" class="scroll-mt-20">
+            <div class="border-l-4 border-red-600 pl-4 mb-8">
+                <h2 class="text-2xl font-bold text-slate-900">AI Agent: Headless Chrome Overseer</h2>
+                <p class="text-slate-600 mt-2">
+                    Live console. This agent is currently <span class="text-green-600 font-bold">active</span> and indexing the expanded personnel database. It performs the Heartbeat Loop and ensures compliance hashes are valid.
+                </p>
+            </div>
+
+            <div class="bg-slate-900 rounded-xl overflow-hidden shadow-xl border border-slate-700">
+                <!-- Toolbar -->
+                <div class="bg-slate-800 p-3 flex flex-wrap items-center justify-between gap-4 border-b border-slate-700">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse" id="agent-status-light"></div>
+                        <span class="text-slate-300 font-mono text-xs uppercase" id="agent-status-text">Agent-0X1A Online</span>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="triggerAvatar()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono rounded transition-colors flex items-center gap-2">
+                            <span>◈</span> Inject 4D Avatar
+                        </button>
+                        <button onclick="triggerKillSwitch()" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-mono rounded transition-colors flex items-center gap-2">
+                            <span>✕</span> KILL SWITCH
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Terminal Window -->
+                <div id="terminal-output" class="h-80 p-4 font-mono text-xs md:text-sm text-green-400 overflow-y-auto terminal-scroll space-y-1 bg-black/50">
+                    <!-- Logs generated by JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-slate-400 text-sm">© 2025 GEM Cybersecurity & Alliance Trust Realty LLC. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // --- EXPANDED DATA STORE ---
+        // Function to generate profiles to ensure we have ~40+ unique entries
+        const generateData = () => {
+            const gemRoles = ["Threat Analyst", "Penetration Tester", "Security Architect", "Incident Responder", "Cryptographer", "Intel Officer", "Compliance Auditor"];
+            const atrRoles = ["Property Manager", "Investment Broker", "Leasing Agent", "Zoning Specialist", "Asset Manager", "Legal Counsel", "Realty Consultant"];
+            
+            // --- CORE MEMBERS (Synchronized with Uploaded File) ---
+            const baseMembers = [
+                { 
+                    id: 1, 
+                    name: "John Doe", 
+                    role: "Cybersecurity Director", 
+                    team: "GEM", 
+                    details: "Oversees threat intelligence operations and system security audits across financial and real estate channels.", 
+                    email: "johndoe@example.com", 
+                    phone: "+1 555-0101", 
+                    compliance: "Clearance: L4-Top", 
+                    status: "active",
+                    telegram: "https://t.me/johndoe"
+                },
+                { 
+                    id: 2, 
+                    name: "Jane Smith", 
+                    role: "Real Estate Consultant", 
+                    team: "Alliance", 
+                    details: "Leads property investment strategy and integrated leasing partnerships under ATR LLC.", 
+                    email: "janesmith@example.com", 
+                    phone: "+1 555-0102", 
+                    compliance: "Licence: RE-9921", 
+                    status: "active",
+                    telegram: "https://t.me/janesmith"
+                },
+                { 
+                    id: 3, 
+                    name: "Victor Chinemelomu", 
+                    role: "Chief Compliance & Intelligence Officer", 
+                    team: "GEM", 
+                    details: "Directs client regulatory intake, fraud detection systems, and ensures alignment with KYC/AML frameworks globally.", 
+                    email: "chinemelomu@gem.com", 
+                    phone: "+1 555-0103", 
+                    compliance: "Clearance: L5-Global", 
+                    status: "active",
+                    telegram: "https://t.me/gemintell"
+                },
+                { 
+                    id: 4, 
+                    name: "Sophia Martinez", 
+                    role: "Director of Financial Recovery Operations", 
+                    team: "GEM", 
+                    details: "Manages digital asset tracing, evidence reporting for victims, and legal documentation flows with partner institutions.", 
+                    email: "sophia@gemrecovery.com", 
+                    phone: "+1 555-0104", 
+                    compliance: "Clearance: L3-Fin", 
+                    status: "approved",
+                    telegram: "https://t.me/sophiarecovery"
+                },
+                { 
+                    id: 5, 
+                    name: "Eric Lin", 
+                    role: "AI Systems Architect", 
+                    team: "GEM", 
+                    details: "Designs automation pipelines and AI-assisted compliance analytics integrated into the GEM platform backend.", 
+                    email: "ericlin@gem.ai", 
+                    phone: "+1 555-0105", 
+                    compliance: "Clearance: L4-Dev", 
+                    status: "active",
+                    telegram: "https://t.me/ai_eric"
+                },
+                { 
+                    id: 6, 
+                    name: "Angela Robinson", 
+                    role: "Legal & Regulatory Liaison Officer", 
+                    team: "Alliance", 
+                    details: "Coordinates with regulatory bodies, compliance attorneys, and handles contract vetting for recovery and real estate services.", 
+                    email: "angela@gemlegal.com", 
+                    phone: "+1 555-0106", 
+                    compliance: "Licence: BAR-221", 
+                    status: "inactive",
+                    telegram: "https://t.me/legalangel"
+                }
+            ];
+
+            const firstNames = ["James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda", "David", "Elizabeth", "William", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa", "Matthew", "Margaret", "Anthony", "Betty", "Mark", "Sandra", "Donald", "Ashley", "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle"];
+            const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores"];
+
+            let idCounter = 7;
+            const newMembers = [];
+
+            // Generate 22 GEM members
+            for(let i=0; i<22; i++) {
+                const fname = firstNames[Math.floor(Math.random() * firstNames.length)];
+                const lname = lastNames[Math.floor(Math.random() * lastNames.length)];
+                newMembers.push({
+                    id: idCounter++,
+                    name: `${fname} ${lname}`,
+                    role: gemRoles[Math.floor(Math.random() * gemRoles.length)],
+                    team: "GEM",
+                    details: "Monitoring network anomalies and conducting rigorous security audits.",
+                    email: `${fname[0].toLowerCase()}.${lname.toLowerCase()}@gem-security.com`,
+                    phone: `+1 555-0${idCounter}`,
+                    compliance: `Clearance: L${Math.floor(Math.random()*3)+2}-Sec`,
+                    status: Math.random() > 0.8 ? "inactive" : "active"
+                });
+            }
+
+            // Generate 22 Alliance members
+            for(let i=0; i<22; i++) {
+                const fname = firstNames[Math.floor(Math.random() * firstNames.length)];
+                const lname = lastNames[Math.floor(Math.random() * lastNames.length)];
+                newMembers.push({
+                    id: idCounter++,
+                    name: `${fname} ${lname}`,
+                    role: atrRoles[Math.floor(Math.random() * atrRoles.length)],
+                    team: "Alliance",
+                    details: "Facilitating high-value property acquisition and tenant relations.",
+                    email: `${fname[0].toLowerCase()}.${lname.toLowerCase()}@atr-llc.com`,
+                    phone: `+1 555-0${idCounter}`,
+                    compliance: `Licence: RE-${1000 + Math.floor(Math.random()*9000)}`,
+                    status: Math.random() > 0.85 ? "inactive" : (Math.random() > 0.7 ? "approved" : "active")
+                });
+            }
+
+            return [...baseMembers, ...newMembers];
+        };
+
+        const teamMembers = generateData();
+
+        const archData = {
+            frontend: {
+                title: "Front-End Component",
+                content: `
+                    <p class="mb-2">React component for rendering team profiles. Adapts styling dynamically.</p>
+                    <ul class="list-disc list-inside mb-4 text-xs text-slate-400">
+                        <li>Thematic Styling (Blue/Amber)</li>
+                        <li>Status Indicators</li>
+                        <li>High-Contrast Contact Blocks</li>
+                    </ul>
+                    <div class="bg-black p-3 rounded border border-slate-700 font-mono text-xs text-blue-300 overflow-x-auto">
+&lt;div className={\`card \${theme}\`}&gt;
+  &lt;h3&gt;{data.name}&lt;/h3&gt;
+  &lt;p&gt;{data.role}&lt;/p&gt;
+  &lt;span class="dot"&gt;&lt;/span&gt;
+&lt;/div&gt;
+                    </div>
+                `
+            },
+            backend: {
+                title: "Back-End Server",
+                content: `
+                    <p class="mb-2">FastAPI server for the team board. Exposes REST and WebSocket endpoints.</p>
+                    <ul class="list-disc list-inside mb-4 text-xs text-slate-400">
+                        <li>Profile Data Model</li>
+                        <li>GET /api/board</li>
+                        <li>WebSocket /ws/live</li>
+                    </ul>
+                    <div class="bg-black p-3 rounded border border-slate-700 font-mono text-xs text-green-300 overflow-x-auto">
+@app.get("/api/board")
+async def get_board():
+    return profiles_db
+
+@app.websocket("/ws/live")
+async def ws(ws: WebSocket):
+    await ws.accept()
+                    </div>
+                `
+            },
+            db: { title: "Data Layer", content: `<p>Hosted PostgreSQL database containing ${teamMembers.length} profile records and logs.</p>` },
+            agent: { 
+                title: "AI Agent Overseer", 
+                content: `
+                    <p class="mb-2">Headless Chrome Agent.</p>
+                    <ul class="list-disc list-inside mb-4 text-xs text-slate-400">
+                        <li>Decentralized Deployment</li>
+                        <li>4D Avatar Support</li>
+                        <li>Heartbeat Loop</li>
+                    </ul>
+                    <div class="bg-black p-3 rounded border border-slate-700 font-mono text-xs text-red-300 overflow-x-auto">
+agent = HeadlessChromeAgent(config)
+agent.run() # Heartbeat loop
+                    </div>
+                ` 
+            }
+        };
+
+        // --- DYNAMIC CHART LOGIC ---
+        let rolesChart;
+        function initChart() {
+            const ctx = document.getElementById('rolesChart').getContext('2d');
+            
+            // Dynamic Counting
+            let cyberCount = 0; // GEM Technical
+            let legalCount = 0; // GEM Non-tech or ATR Legal
+            let realtyCount = 0; // ATR Core
+            let adminCount = 0; 
+
+            teamMembers.forEach(m => {
+                const r = m.role.toLowerCase();
+                if (m.team === 'GEM') {
+                    if (r.includes('legal') || r.includes('compliance') || r.includes('financial')) legalCount++;
+                    else cyberCount++;
+                } else {
+                    if (r.includes('legal') || r.includes('counsel')) legalCount++;
+                    else if (r.includes('manager') || r.includes('agent') || r.includes('broker')) realtyCount++;
+                    else adminCount++;
+                }
+            });
+
+            rolesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cybersecurity (GEM)', 'Compliance/Legal', 'Real Estate (ATR)', 'Other Ops'],
+                    datasets: [{
+                        data: [cyberCount, legalCount, realtyCount, adminCount],
+                        backgroundColor: ['#1d4ed8', '#475569', '#d97706', '#94a3b8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 10, usePointStyle: true, font: {size: 10} } }
+                    },
+                    cutout: '75%'
+                }
+            });
+
+            // Update Text Displays
+            document.getElementById('total-staff-count').innerText = teamMembers.length;
+            document.getElementById('gem-count-display').innerText = teamMembers.filter(m => m.team === 'GEM').length;
+            document.getElementById('atr-count-display').innerText = teamMembers.filter(m => m.team === 'Alliance').length;
+        }
+
+        // --- TEAM BOARD LOGIC ---
+        function filterTeam(filter) {
+            const grid = document.getElementById('team-grid');
+            grid.innerHTML = ''; 
+
+            document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+                btn.className = "px-4 py-2 rounded-full text-sm font-medium transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50";
+            });
+            const activeBtn = document.getElementById(`btn-${filter.toLowerCase()}`);
+            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-full text-sm font-medium transition-all bg-slate-800 text-white shadow-md ring-2 ring-slate-800 ring-offset-2";
+
+            const filtered = filter === 'all' ? teamMembers : teamMembers.filter(m => m.team === filter);
+            document.getElementById('showing-count').innerText = `Showing ${filtered.length} profiles`;
+
+            filtered.forEach(member => {
+                const isGem = member.team === 'GEM';
+                const borderColor = isGem ? 'border-blue-200' : 'border-amber-200';
+                const accentColor = isGem ? 'text-blue-700' : 'text-amber-600';
+                const statusColor = member.status === 'active' ? 'text-green-500' : (member.status === 'approved' ? 'text-blue-400' : 'text-slate-400');
+                
+                // NEW: Bold Avatar Generation
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=${isGem ? '1d4ed8' : 'd97706'}&color=fff&size=200&bold=true`;
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-xl border-2 ${borderColor} p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full`;
+                
+                let telegramBtn = '';
+                if(member.telegram) {
+                    telegramBtn = `
+                    <a href="${member.telegram}" target="_blank" class="mt-2 text-[10px] font-bold text-white bg-sky-500 hover:bg-sky-600 px-3 py-1.5 rounded inline-flex items-center gap-2 w-fit transition-colors">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.223-.548.223l.188-2.85 5.18-4.68c.223-.198-.054-.31-.346-.11l-6.4 4.02-2.76-.92c-.597-.187-.613-.6.126-.88l10.8-4.16c.5-.18.94.11.76.88z"/></svg>
+                        Telegram
+                    </a>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="relative mr-4">
+                            <!-- BOLD PICTURE OVERVIEW -->
+                            <img src="${avatarUrl}" alt="${member.name}" class="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover">
+                            
+                            <!-- STATUS DOT OVERLAY -->
+                            <div class="absolute bottom-0 right-0 w-6 h-6 border-2 border-white rounded-full bg-white flex items-center justify-center transform translate-x-1 translate-y-1">
+                                ${member.status === 'active' ? `<div class="pulse-ring ${statusColor} opacity-50 w-full h-full absolute"></div>` : ''}
+                                <div class="w-3 h-3 rounded-full bg-current ${statusColor}"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-50 text-slate-500 uppercase tracking-wider border border-slate-200 self-start">${member.team}</span>
+                    </div>
+                    
+                    <h3 class="text-base font-bold text-slate-900 leading-tight mb-1">${member.name}</h3>
+                    <p class="text-xs ${accentColor} font-bold mb-3 min-h-[1.5rem] flex items-center uppercase tracking-wide">${member.role}</p>
+                    <p class="text-xs text-slate-500 mb-4 flex-grow line-clamp-3 leading-relaxed">${member.details}</p>
+                    
+                    <div class="bg-slate-50 rounded p-3 mb-3 border border-slate-100 space-y-2">
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span class="uppercase tracking-wider">Email</span>
+                            <span class="font-mono text-slate-600 truncate max-w-[140px]" title="${member.email}">${member.email}</span>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span class="uppercase tracking-wider">Phone</span>
+                            <span class="font-mono text-slate-600">${member.phone}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[10px] border-t border-slate-100 pt-3 mt-auto">
+                        <span class="font-semibold text-slate-500">${member.compliance}</span>
+                        ${telegramBtn ? telegramBtn : `<span class="font-mono text-slate-300">#${Math.random().toString(16).substr(2, 4).toUpperCase()}</span>`}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showArchDetail(key) {
+            document.querySelectorAll('.arch-node').forEach(el => el.classList.remove('active', 'ring-2', 'ring-offset-2', 'ring-blue-500'));
+            const activeNode = document.getElementById(`node-${key}`);
+            if(activeNode) activeNode.classList.add('active', 'ring-2', 'ring-offset-2', 'ring-blue-500');
+            const data = archData[key];
+            document.getElementById('detail-title').innerText = data.title;
+            document.getElementById('detail-content').innerHTML = data.content;
+        }
+
+        // --- AI AGENT SIMULATION ---
+        let terminalInterval;
+        let isDead = false;
+        const tickerEl = document.getElementById('ai-ticker');
+
+        function startTerminal() {
+            const term = document.getElementById('terminal-output');
+            
+            // Randomly sample names from the generated DB for realism
+            const randomName = () => teamMembers[Math.floor(Math.random() * teamMembers.length)].name;
+            const randomRole = () => teamMembers[Math.floor(Math.random() * teamMembers.length)].role;
+
+            const messages = [
+                () => `Heartbeat sent... OK (Latency: ${Math.floor(Math.random()*40)+10}ms)`,
+                () => `Verifying compliance hash for ${randomName()}... MATCH`,
+                () => `Scanning config.json... NO CHANGES`,
+                () => `Memory usage stable at ${Math.floor(Math.random()*100)+200}MB`,
+                () => `Headless Chrome: Rendering background tab...`,
+                () => `Network idle. Waiting for instructions.`,
+                () => `Analyzing ${randomRole()} permissions... VALID`,
+                () => `[AI-OVERSEER] Optimizing dashboard data visualization...`,
+                () => `Detected new profile entry: ${randomName()}`,
+                () => `Websocket /ws/live connection stable.`
+            ];
+
+            terminalInterval = setInterval(() => {
+                if(isDead) return;
+                const msgFn = messages[Math.floor(Math.random() * messages.length)];
+                const msg = typeof msgFn === 'function' ? msgFn() : msgFn;
+                addLog(`[${new Date().toLocaleTimeString()}] ${msg}`);
+                
+                // Update ticker occasionally
+                if(Math.random() > 0.7) {
+                    tickerEl.innerText = `ANALYZING: ${msg.toUpperCase().substring(0, 50)}...`;
+                }
+            }, 1800);
+        }
+
+        function addLog(text, colorClass = "text-green-400") {
+            const term = document.getElementById('terminal-output');
+            const p = document.createElement('div');
+            p.className = `${colorClass} border-l-2 border-transparent hover:border-green-600 pl-2 transition-colors`;
+            p.innerText = text;
+            term.appendChild(p);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function triggerAvatar() {
+            if(isDead) return;
+            addLog(`[${new Date().toLocaleTimeString()}] WARN: Injecting 4D Avatar Video Stream...`, "text-amber-400");
+            setTimeout(() => addLog(`[SYSTEM] Video Injection Successful. Flags: --use-fake-device-for-media-stream`, "text-blue-400 font-bold"), 800);
+            tickerEl.innerText = "*** ALERT: 4D AVATAR INJECTION IN PROGRESS ***";
+        }
+
+        function triggerKillSwitch() {
+            isDead = true;
+            clearInterval(terminalInterval);
+            tickerEl.innerText = "!!! CONNECTION LOST - AGENT TERMINATED !!!";
+            tickerEl.classList.add('text-red-500', 'font-bold');
+            
+            addLog(`[URGENT] KILL SWITCH TRIGGERED FROM REMOTE`, "text-red-500 font-bold bg-red-900/20 p-1");
+            addLog(`[SYSTEM] Closing Headless Browser...`, "text-red-400");
+            
+            setTimeout(() => {
+                addLog(`[SYSTEM] Process Exited Safely (0). Agent Offline.`, "text-slate-500");
+                document.getElementById('agent-status-light').classList.remove('bg-green-500', 'animate-pulse');
+                document.getElementById('agent-status-light').classList.add('bg-red-500');
+                document.getElementById('agent-status-text').innerText = "DISCONNECTED";
+                document.getElementById('agent-status-text').classList.add('text-red-500');
+            }, 1000);
+        }
+
+        function scrollToSection(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            filterTeam('all');
+            showArchDetail('frontend');
+            startTerminal();
+        });
+    </script>
+</body>
+</html>
+

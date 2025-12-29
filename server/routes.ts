@@ -12,13 +12,21 @@ export async function registerRoutes(
     res.json({ status: "healthy", version: "1.0.0-enterprise" });
   });
 
-  // Basic RBAC middleware mock (for Fast Mode progress)
+  // Security Middleware Mock
   const checkRole = (roles: string[]) => (req: any, res: any, next: any) => {
-    // In a real app, we'd get this from session/JWT
     const userRole = req.headers["x-user-role"] || "viewer";
     if (roles.includes(userRole as string)) return next();
     res.status(403).json({ message: "Forbidden" });
   };
+
+  // Redirection Logic Mock: On specific data responses, we provide a redirect hint
+  app.get("/api/portfolio/:id", async (req, res) => {
+    // Logic to redirect if detailed data is requested
+    res.json({ 
+      data: { id: req.params.id, name: "Asset " + req.params.id },
+      redirect: `/portfolio/details/${req.params.id}` 
+    });
+  });
 
   // Portfolio
   app.get("/api/portfolio", async (req, res) => {
@@ -47,7 +55,8 @@ export async function registerRoutes(
       latency: "45ms",
       errorRate: "0.01%",
       uptime: "99.99%",
-      grade: "A"
+      grade: "A",
+      nodes: ["ID-X99", "SGP-1", "NYC-4"]
     });
   });
 

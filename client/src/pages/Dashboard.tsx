@@ -9,7 +9,7 @@ import {
   Activity, Users, AlertCircle, Search, 
   ArrowUpRight, Clock, Database, Server, Cpu,
   Lock, Key, Smartphone, Fingerprint, Globe, 
-  Zap, BarChart3, Layers
+  Zap, BarChart3, Layers, UserPlus
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -19,11 +19,20 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const teamMembers = [
+  { name: "John Doe", role: "GEM Lead", division: "GEM", initials: "JD", color: "bg-blue-700" },
+  { name: "Jane Smith", role: "Alliance Director", division: "Alliance", initials: "JS", color: "bg-amber-600" },
+  { name: "Robert Chen", role: "Cyber Analyst", division: "GEM", initials: "RC", color: "bg-blue-600" },
+  { name: "Sarah Miller", role: "Asset Manager", division: "Alliance", initials: "SM", color: "bg-amber-500" },
+];
 
 export default function Dashboard() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [unlockStep, setUnlockStep] = useState(0); 
   const [gradeScore, setGradeScore] = useState(98);
+  const [filter, setFilter] = useState("all");
 
   const { data: health } = useQuery({
     queryKey: ["/api/health"],
@@ -45,7 +54,6 @@ export default function Dashboard() {
   if (unlockStep < 2 && (location.startsWith("/admin") || location === "/portal")) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-8 relative overflow-hidden">
-        {/* Background Gradients */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
         
         <motion.div 
@@ -160,6 +168,7 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Stats Section */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
           { title: "Network Grade", value: "AAA+", sub: "Top 0.1% Global", icon: Zap, color: "text-amber-500" },
@@ -183,6 +192,78 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Team Command Center Rebuild */}
+      <section id="team" className="space-y-6">
+        <div className="flex items-center justify-between border-l-4 border-primary pl-4 py-1">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Team Command Center</h2>
+            <p className="text-muted-foreground text-sm font-medium">Personnel Directory v4.0 | Color-Coded Mesh</p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant={filter === "all" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFilter("all")}
+              className="rounded-full px-4"
+            >
+              All Units
+            </Button>
+            <Button 
+              variant={filter === "GEM" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFilter("GEM")}
+              className="rounded-full px-4 border-blue-500/20 text-blue-600 hover:bg-blue-500/5"
+            >
+              GEM (Cyber)
+            </Button>
+            <Button 
+              variant={filter === "Alliance" ? "default" : "outline"} 
+              size="sm" 
+              onClick={() => setFilter("Alliance")}
+              className="rounded-full px-4 border-amber-500/20 text-amber-600 hover:bg-amber-500/5"
+            >
+              Alliance (Realty)
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {teamMembers
+            .filter(m => filter === "all" || m.division === filter)
+            .map((member, i) => (
+              <Card key={i} className="group hover-elevate transition-all border-border/40 overflow-hidden text-center p-6">
+                <div className="flex justify-center mb-4">
+                  <div className={`p-1 rounded-2xl border-4 ${member.division === "GEM" ? "border-blue-700/20" : "border-amber-600/20"} shadow-xl group-hover:scale-105 transition-transform`}>
+                    <Avatar className="h-20 w-20 rounded-xl">
+                      <AvatarImage src={`https://ui-avatars.com/api/?name=${member.initials}&background=${member.color.replace('bg-', '')}&color=fff&size=128&bold=true`} />
+                      <AvatarFallback className={`${member.color} text-white font-bold text-2xl`}>
+                        {member.initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+                <h3 className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors">{member.name}</h3>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{member.role}</p>
+                <div className="mt-4 pt-4 border-t border-border/40 flex items-center justify-center gap-2">
+                  <Badge variant="secondary" className="text-[9px] uppercase font-black px-2">
+                    {member.division}
+                  </Badge>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setLocation(`/team/${member.name.toLowerCase().replace(' ', '-')}`)}>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          <Card className="border-2 border-dashed border-border/40 flex flex-col items-center justify-center p-6 bg-muted/5 hover:bg-muted/10 transition-colors cursor-pointer group">
+            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors">
+              <UserPlus className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Provision Unit</p>
+          </Card>
+        </div>
+      </section>
+
+      {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <Card className="lg:col-span-8 border-border/40 shadow-xl shadow-foreground/5 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between bg-muted/30 border-b border-border/50 py-6">
@@ -203,7 +284,7 @@ export default function Dashboard() {
                 { action: "Grants Allocation Cycle", user: "System", time: "14m ago", status: "Optimized" },
                 { action: "Security Policy Propagated", user: "Global-Root", time: "45m ago", status: "Secure" },
               ].map((log, i) => (
-                <div key={i} className="flex items-center gap-6 p-6 hover:bg-muted/10 transition-colors group">
+                <div key={i} className="flex items-center gap-6 p-6 hover:bg-muted/10 transition-colors group cursor-pointer" onClick={() => setLocation(`/logs/${i}`)}>
                   <div className="h-12 w-12 rounded-2xl bg-card border border-border flex items-center justify-center group-hover:border-primary/30 transition-colors shadow-sm">
                     <Layers className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
