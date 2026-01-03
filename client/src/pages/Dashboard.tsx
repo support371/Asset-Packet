@@ -2,22 +2,15 @@ import {
   Card, CardContent, CardHeader, CardTitle, CardDescription 
 } from "@/components/ui/card";
 import { 
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell 
-} from "@/components/ui/table";
-import { 
-  Briefcase, TrendingUp, Landmark, ShieldCheck, 
-  Activity, Users, AlertCircle, Search, 
-  ArrowUpRight, Clock, Database, Server, Cpu,
-  Lock, Key, Smartphone, Fingerprint, Globe, 
-  Zap, BarChart3, Layers, UserPlus
+  Briefcase, ShieldCheck, 
+  Activity, ArrowUpRight, 
+  Zap, BarChart3, Layers, UserPlus, Lock, Fingerprint, Smartphone, Globe
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -34,16 +27,15 @@ export default function Dashboard() {
   const [gradeScore, setGradeScore] = useState(98);
   const [filter, setFilter] = useState("all");
 
-  const { data: health } = useQuery({
-    queryKey: ["/api/health"],
+  const { data: portfolioItems } = useQuery({
+    queryKey: ["/api/portfolio"],
   });
 
   const { data: diagnostics } = useQuery({
     queryKey: ["/api/admin/diagnostics"],
-    enabled: location.startsWith("/admin") || location === "/",
+    enabled: unlockStep === 2,
   });
 
-  // Global usage simulation
   useEffect(() => {
     const interval = setInterval(() => {
       setGradeScore(prev => Math.min(100, Math.max(95, prev + (Math.random() - 0.5))));
@@ -51,7 +43,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  if (unlockStep < 2 && (location.startsWith("/admin") || location === "/portal")) {
+  if (unlockStep < 2) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-8 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
@@ -149,8 +141,7 @@ export default function Dashboard() {
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Global Node: ID-X99</span>
           </div>
           <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-foreground via-foreground to-foreground/50">
-            {location === "/" ? "Global Command" : 
-             location.substring(1).split('/')[0].charAt(0).toUpperCase() + location.substring(1).split('/')[0].slice(1)}
+            Global Command
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl font-medium">
             Real-time synchronization across multi-tenant infrastructures with graded performance optimization.
@@ -172,9 +163,9 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
           { title: "Network Grade", value: "AAA+", sub: "Top 0.1% Global", icon: Zap, color: "text-amber-500" },
-          { title: "Portfolio Assets", value: "842 Unit", sub: "Distributed Mesh", icon: Briefcase, color: "text-blue-500" },
+          { title: "Portfolio Assets", value: portfolioItems?.length || "--", sub: "Distributed Mesh", icon: Briefcase, color: "text-blue-500" },
           { title: "Liquidity Index", value: "92.4", sub: "Market Optimized", icon: BarChart3, color: "text-primary" },
-          { title: "Security Layer", value: "Active", sub: "Zero Trust Protocol", icon: ShieldCheck, color: "text-emerald-500" },
+          { title: "Security Layer", value: diagnostics?.uptime || "99.99%", sub: "Zero Trust Protocol", icon: ShieldCheck, color: "text-emerald-500" },
         ].map((stat, i) => (
           <Card key={i} className="group hover-elevate transition-all border-border/40 overflow-hidden relative">
             <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -329,11 +320,11 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-1">
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">P99 Latency</span>
-                <p className="text-xl font-black tabular-nums">4.2ms</p>
+                <p className="text-xl font-black tabular-nums">{diagnostics?.latency || "4.2ms"}</p>
               </div>
               <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-1">
                 <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Uptime</span>
-                <p className="text-xl font-black tabular-nums text-emerald-500">99.99</p>
+                <p className="text-xl font-black tabular-nums text-emerald-500">{diagnostics?.uptime || "99.99"}</p>
               </div>
             </div>
 

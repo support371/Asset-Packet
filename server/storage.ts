@@ -32,6 +32,9 @@ export interface IStorage {
   // Audit
   createAuditLog(log: any): Promise<AuditLog>;
   getAuditLogs(orgId: number): Promise<AuditLog[]>;
+
+  // Seeds
+  seedInitialData(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -95,6 +98,23 @@ export class DatabaseStorage implements IStorage {
   async getAuditLogs(orgId: number): Promise<AuditLog[]> {
     return await db.select().from(auditLogs).where(eq(auditLogs.organizationId, orgId));
   }
+
+  async seedInitialData(): Promise<void> {
+    const [org] = await db.select().from(organizations);
+    if (!org) {
+      const [newOrg] = await db.insert(organizations).values({
+        name: "SSA Enterprise",
+        domain: "ssa.global",
+        settings: {}
+      }).returning();
+
+      await db.insert(portfolio).values([
+        { organizationId: newOrg.id, name: "Cyber Intel Node A", type: "Security", status: "active", details: {} },
+        { organizationId: newOrg.id, name: "Alliance Property Group", type: "Real Estate", status: "active", details: {} }
+      ]);
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
+storage.seedInitialData().catch(console.error);
