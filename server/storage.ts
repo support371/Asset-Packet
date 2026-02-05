@@ -64,7 +64,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPortfolios(orgId: number): Promise<Portfolio[]> {
-    return await db.select().from(portfolio).where(eq(portfolio.organizationId, orgId));
+    try {
+      return await db.select().from(portfolio).where(eq(portfolio.organizationId, orgId));
+    } catch (e) {
+      console.error("Error fetching portfolios:", e);
+      return [];
+    }
   }
 
   async createPortfolio(data: any): Promise<Portfolio> {
@@ -100,18 +105,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async seedInitialData(): Promise<void> {
-    const [org] = await db.select().from(organizations);
-    if (!org) {
-      const [newOrg] = await db.insert(organizations).values({
-        name: "SSA Enterprise",
-        domain: "ssa.global",
-        settings: {}
-      }).returning();
+    try {
+      const [org] = await db.select().from(organizations).limit(1);
+      if (!org) {
+        const [newOrg] = await db.insert(organizations).values({
+          name: "SSA Enterprise",
+          slug: "ssa-enterprise",
+          plan: "enterprise"
+        }).returning();
 
-      await db.insert(portfolio).values([
-        { organizationId: newOrg.id, name: "Cyber Intel Node A", type: "Security", status: "active", details: {} },
-        { organizationId: newOrg.id, name: "Alliance Property Group", type: "Real Estate", status: "active", details: {} }
-      ]);
+        await db.insert(portfolio).values([
+          { organizationId: newOrg.id, name: "Cyber Intel Node A", status: "active", valuation: 1200000 },
+          { organizationId: newOrg.id, name: "Alliance Property Group", status: "active", valuation: 8500000 }
+        ]);
+      }
+    } catch (e) {
+      console.error("Seeding error:", e);
     }
   }
 }

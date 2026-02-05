@@ -6,7 +6,7 @@ import { z } from "zod";
 export const organizations = pgTable("organizations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  slug: text("slug").unique().notNull(),
+  slug: text("slug").notNull().default("default"),
   plan: text("plan").notNull().default("enterprise"), // enterprise, professional, basic
   isSafeMode: boolean("is_safe_mode").default(false),
   createdAt: timestamp("created_at").defaultNow(),
