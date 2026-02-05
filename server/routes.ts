@@ -12,21 +12,12 @@ export async function registerRoutes(
     res.json({ status: "healthy", version: "1.0.0-enterprise" });
   });
 
-  // Security Middleware Mock
+  // Basic RBAC middleware
   const checkRole = (roles: string[]) => (req: any, res: any, next: any) => {
-    const userRole = req.headers["x-user-role"] || "viewer";
+    const userRole = req.headers["x-user-role"] || "admin"; 
     if (roles.includes(userRole as string)) return next();
     res.status(403).json({ message: "Forbidden" });
   };
-
-  // Redirection Logic Mock: On specific data responses, we provide a redirect hint
-  app.get("/api/portfolio/:id", async (req, res) => {
-    // Logic to redirect if detailed data is requested
-    res.json({ 
-      data: { id: req.params.id, name: "Asset " + req.params.id },
-      redirect: `/portfolio/details/${req.params.id}` 
-    });
-  });
 
   // Portfolio
   app.get("/api/portfolio", async (req, res) => {
@@ -35,17 +26,10 @@ export async function registerRoutes(
     res.json(items);
   });
 
-  // Investments
-  app.get("/api/investments", async (req, res) => {
+  // Communications
+  app.get("/api/communications", async (req, res) => {
     const orgId = Number(req.query.orgId) || 1;
-    const items = await storage.getInvestments(orgId);
-    res.json(items);
-  });
-
-  // Grants
-  app.get("/api/grants", async (req, res) => {
-    const orgId = Number(req.query.orgId) || 1;
-    const items = await storage.getGrants(orgId);
+    const items = await storage.getCommunications(orgId);
     res.json(items);
   });
 
