@@ -6,7 +6,7 @@ import { z } from "zod";
 export const organizations = pgTable("organizations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  slug: text("slug").notNull().default("default"),
+  slug: text("slug").notNull().unique(),
   plan: text("plan").notNull().default("enterprise"),
   isSafeMode: boolean("is_safe_mode").default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("viewer"), 
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   twoFactorSecret: text("two_factor_secret"),
+  lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -49,6 +50,7 @@ export const portfolio = pgTable("portfolio", {
   name: text("name").notNull(),
   status: text("status").notNull(), 
   valuation: doublePrecision("valuation").default(0),
+  performanceGrade: text("performance_grade").default("A"),
   notes: text("notes"),
   attachments: jsonb("attachments").default([]),
   createdAt: timestamp("created_at").defaultNow(),
@@ -75,6 +77,7 @@ export const auditLogs = pgTable("audit_logs", {
   targetType: text("target_type"),
   targetId: integer("target_id"),
   metadata: jsonb("metadata"),
+  severity: text("severity").default("info"), // info, warning, critical
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -87,3 +90,4 @@ export type Organization = typeof organizations.$inferSelect;
 export type Communication = typeof communications.$inferSelect;
 export type Team = typeof teams.$inferSelect;
 export type Portfolio = typeof portfolio.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
