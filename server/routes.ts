@@ -45,5 +45,8 @@ export async function registerRoutes(
     });
   });
 
+  // Handle SPA routing - redirect all non-API requests to index.html is handled by Vite/server/index.ts
+  // But we can add a fallback route here if needed for specific logic
+  
   return httpServer;
 }
